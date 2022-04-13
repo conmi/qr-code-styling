@@ -307,29 +307,24 @@ export default class QRCanvas {
       canvasContext.fill("evenodd");
 
       if (options.cornersDotOptions?.type) {
-        const cornersDot = new QRCornerDot({ context: canvasContext, type: options.cornersDotOptions?.type });
+        if (options.cornersDotOptions.type == "extra-rounded") {
+          const dot = new QRDot({ context: canvasContext, type: options.cornersDotOptions.type });
 
-        canvasContext.beginPath();
-        cornersDot.draw(x + dotSize * 2, y + dotSize * 2, cornersDotSize, rotation);
+          canvasContext.beginPath();
+
+          this._drawDotMask(dot, x, y, dotSize);
+        } else {
+          const cornersDot = new QRCornerDot({ context: canvasContext, type: options.cornersDotOptions?.type });
+
+          canvasContext.beginPath();
+          cornersDot.draw(x + dotSize * 2, y + dotSize * 2, cornersDotSize, rotation);
+        }
       } else {
         const dot = new QRDot({ context: canvasContext, type: options.dotsOptions.type });
 
         canvasContext.beginPath();
 
-        for (let i = 0; i < dotMask.length; i++) {
-          for (let j = 0; j < dotMask[i].length; j++) {
-            if (!dotMask[i]?.[j]) {
-              continue;
-            }
-
-            dot.draw(
-              x + i * dotSize,
-              y + j * dotSize,
-              dotSize,
-              (xOffset: number, yOffset: number): boolean => !!dotMask[i + xOffset]?.[j + yOffset]
-            );
-          }
-        }
+        this._drawDotMask(dot, x, y, dotSize);
       }
 
       if (options.cornersDotOptions?.gradient) {
@@ -465,5 +460,22 @@ export default class QRCanvas {
     }
 
     return gradient;
+  }
+
+  _drawDotMask(dot: QRDot, x: number, y: number, dotSize: number): void {
+    for (let i = 0; i < dotMask.length; i++) {
+      for (let j = 0; j < dotMask[i].length; j++) {
+        if (!dotMask[i]?.[j]) {
+          continue;
+        }
+
+        dot.draw(
+          x + i * dotSize,
+          y + j * dotSize,
+          dotSize,
+          (xOffset: number, yOffset: number): boolean => !!dotMask[i + xOffset]?.[j + yOffset]
+        );
+      }
+    }
   }
 }
